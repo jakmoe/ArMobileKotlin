@@ -3,76 +3,78 @@ package com.example.helloarkotlin
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
-import android.os.Build
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
-import android.view.MotionEvent
 import android.widget.Toast
-import com.google.ar.core.HitResult
-import com.google.ar.core.Plane
-import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.ux.ArFragment
+import com.google.ar.core.Pose
+import com.google.ar.sceneform.AnchorNode
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.rendering.MaterialFactory
+import com.google.ar.sceneform.rendering.ShapeFactory
 import com.google.ar.sceneform.ux.TransformableNode
+
 
 class MainActivity : AppCompatActivity() {
     private val tag = MainActivity::class.java.simpleName
     private val minOpenGLVersion = 3.0
 
     private var arFragment: ArFragment? = null
-    private var andyRenderable: ModelRenderable? = null
 
     override// CompletableFuture requires api level 24
     // FutureReturnValueIgnored is not valid
     fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (!checkIsSupportedDeviceOrFinish(this)) {
-            return
-        }
+        if (!checkIsSupportedDeviceOrFinish(this)) return
 
         setContentView(R.layout.activity_main)
         arFragment = supportFragmentManager.findFragmentById(R.id.ux_fragment) as ArFragment?
+        val sceneView = arFragment!!.arSceneView
 
-        // When you build a Renderable, Sceneform loads its resources in the background while returning
-        // a CompletableFuture. Call thenAccept(), handle(), or check isDone() before calling get().
-        ModelRenderable.builder()
-            .setSource(this, R.raw.andy)
-            .build()
-            .thenAccept{ renderable -> andyRenderable = renderable }
-            .exceptionally {
-                val toast = Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG)
-                toast.setGravity(Gravity.CENTER, 0, 0)
-                toast.show()
-                null
-            }
+        // val pose = sceneView.arFrame?.camera?.pose
+        // val locationPose = Pose.makeTranslation(100.0f, 4.0f, 0.0f)//define a translation
+        // val targetPose = pose?.compose(locationPose) //make a new pose based on camera pose
+        // val anchor = sceneView.session?.createAnchor(targetPose)
+        val anchorNode = AnchorNode()
+        anchorNode.setParent(sceneView.scene)
+        anchorNode.localPosition = Vector3(0.0f, 0.0f, -0.6f)
 
+        val node = TransformableNode(arFragment!!.transformationSystem)
+        node.setParent(anchorNode)
+        MaterialFactory.makeOpaqueWithColor(this,
+            com.google.ar.sceneform.rendering.Color(Color.RED)
+        ).thenAccept {
+            node.renderable = ShapeFactory.makeSphere(0.1f, Vector3(0f, 0f, 0f), it)
+        }
+        node.select()
+        /*
         arFragment!!.setOnTapArPlaneListener { hitResult: HitResult, _, _ ->
-                if (andyRenderable == null) return@setOnTapArPlaneListener
 
                 // Create the Anchor.
                 val anchor = hitResult.createAnchor()
                 val anchorNode = AnchorNode(anchor)
                 anchorNode.setParent(arFragment!!.arSceneView.scene)
 
-                // Create the transformable andy and add it to the anchor.
-                val andy = TransformableNode(arFragment!!.transformationSystem)
-                andy.setParent(anchorNode)
-                andy.renderable = andyRenderable
-                andy.select()
+                // Create the transformable node and add it to the anchor.
+                val node = TransformableNode(arFragment!!.transformationSystem)
+                node.setParent(anchorNode)
+                MaterialFactory.makeOpaqueWithColor(this,
+                    com.google.ar.sceneform.rendering.Color(Color.RED)
+                ).thenAccept {
+                    node.renderable = ShapeFactory.makeSphere(0.1f, Vector3(0.1f, 0.1f, 0.1f), it)
+                }
+                node.select()
             }
+            */
     }
 
     /**
      * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
      * on this device.
-     *
-     *
      * Sceneform requires Android N on the device as well as OpenGL 3.0 capabilities.
-     *
-     *
      * Finishes the activity if Sceneform can not run
      */
     private fun checkIsSupportedDeviceOrFinish(activity: Activity): Boolean {
