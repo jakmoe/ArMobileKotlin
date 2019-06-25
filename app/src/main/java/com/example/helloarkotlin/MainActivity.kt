@@ -1,91 +1,94 @@
 package com.example.helloarkotlin
 
 import android.app.Activity
-import android.app.ActivityManager
-import android.content.Context
-import android.graphics.Color
-import android.support.v7.app.AppCompatActivity
+import android.app.PendingIntent
+import android.content.Intent
+import android.nfc.NdefMessage
+import android.nfc.NdefRecord.RTD_TEXT
+import android.nfc.NdefRecord.TNF_WELL_KNOWN
+import android.nfc.NfcAdapter
 import android.os.Bundle
-import android.util.Log
+import android.provider.AlarmClock.EXTRA_MESSAGE
+import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.widget.Toast
-import com.google.ar.sceneform.ux.ArFragment
-import com.google.ar.core.Pose
-import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.rendering.MaterialFactory
-import com.google.ar.sceneform.rendering.ShapeFactory
-import com.google.ar.sceneform.ux.TransformableNode
 
 
 class MainActivity : AppCompatActivity() {
-    private val tag = MainActivity::class.java.simpleName
-    private val minOpenGLVersion = 3.0
 
-    private var arFragment: ArFragment? = null
+    private var mNfcAdapter: NfcAdapter? = null
 
-    override// CompletableFuture requires api level 24
-    // FutureReturnValueIgnored is not valid
-    fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (!checkIsSupportedDeviceOrFinish(this)) return
-
         setContentView(R.layout.activity_main)
-        arFragment = supportFragmentManager.findFragmentById(R.id.ux_fragment) as ArFragment?
-        val sceneView = arFragment!!.arSceneView
 
-        // val pose = sceneView.arFrame?.camera?.pose
-        // val locationPose = Pose.makeTranslation(100.0f, 4.0f, 0.0f)//define a translation
-        // val targetPose = pose?.compose(locationPose) //make a new pose based on camera pose
-        // val anchor = sceneView.session?.createAnchor(targetPose)
-        val anchorNode = AnchorNode()
-        anchorNode.setParent(sceneView.scene)
-        anchorNode.localPosition = Vector3(0.0f, 0.0f, -0.6f)
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
-        val node = TransformableNode(arFragment!!.transformationSystem)
-        node.setParent(anchorNode)
-        MaterialFactory.makeOpaqueWithColor(this,
-            com.google.ar.sceneform.rendering.Color(Color.RED)
-        ).thenAccept {
-            node.renderable = ShapeFactory.makeSphere(0.1f, Vector3(0f, 0f, 0f), it)
+        if (!checkIsSupportedDeviceOrFinish(this, mNfcAdapter)) return
+
+    }
+    fun startArSession(view: View) = startArActivity()
+
+    private fun startArActivity() {
+        val intent = Intent(this, AugmentedRealityActivity::class.java).apply {
+            putExtra(EXTRA_MESSAGE, "Testing Intent")
         }
-        node.select()
-        /*
-        arFragment!!.setOnTapArPlaneListener { hitResult: HitResult, _, _ ->
+        startActivity(intent)
+    }
 
-                // Create the Anchor.
-                val anchor = hitResult.createAnchor()
-                val anchorNode = AnchorNode(anchor)
-                anchorNode.setParent(arFragment!!.arSceneView.scene)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
 
-                // Create the transformable node and add it to the anchor.
-                val node = TransformableNode(arFragment!!.transformationSystem)
-                node.setParent(anchorNode)
-                MaterialFactory.makeOpaqueWithColor(this,
-                    com.google.ar.sceneform.rendering.Color(Color.RED)
-                ).thenAccept {
-                    node.renderable = ShapeFactory.makeSphere(0.1f, Vector3(0.1f, 0.1f, 0.1f), it)
-                }
-                node.select()
-            }
-            */
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
+            if (isSupportedTag(intent)) startArActivity()
+            else Toast.makeText(this, "Tag not Supported", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun isSupportedTag(intent: Intent): Boolean {
+        val messages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
+        // Check if Byte Array is correctly read from Parcelable (NFC Tag)
+        if (messages != null) {
+            val ndefMessages = arrayOfNulls<NdefMessage>(messages.size)
+            // Cast Byte Array into NdefMessage for Reading
+            for (i in 0 until messages.size) ndefMessages[i] = messages[i] as NdefMessage
+            // Get First Record of NdefMessages for reading out our Content
+            val ndefRecord = ndefMessages[0]!!.records[0]
+            // Check if Type of the Record matches with expected Text Type
+            val id = String(ndefRecord.payload)
+            // HERE ID CHECK
+            // IF ID FITS GO FURTHER, IF NOT GO BAD
+            Toast.makeText(this, "ID is $id", Toast.LENGTH_LONG).show()
+            return true
+        }
+        return false
     }
 
     /**
-     * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
-     * on this device.
-     * Sceneform requires Android N on the device as well as OpenGL 3.0 capabilities.
-     * Finishes the activity if Sceneform can not run
+     * Reregister the Checking for NFC Tags
      */
-    private fun checkIsSupportedDeviceOrFinish(activity: Activity): Boolean {
-        val openGlVersionString = (activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
-            .deviceConfigurationInfo
-            .glEsVersion
-        if (java.lang.Double.parseDouble(openGlVersionString) < minOpenGLVersion) {
-            Log.e(tag, "Sceneform requires OpenGL ES 3.0 later")
-            Toast.makeText(activity, "Sceneform requires OpenGL ES 3.0 or later", Toast.LENGTH_LONG)
-                .show()
-            activity.finish()
+    override fun onResume() {
+        super.onResume()
+        val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0)
+        mNfcAdapter!!.enableForegroundDispatch(this, pendingIntent, null, null)
+    }
+
+    /**
+     * Unregister the Checking for NFC Tags
+     */
+    override fun onPause() {
+        super.onPause()
+        mNfcAdapter!!.disableForegroundDispatch(this)
+    }
+
+    /**
+     * Checks for NFC Capability
+     */
+    private fun checkIsSupportedDeviceOrFinish(activity: Activity, mNfcAdapter: NfcAdapter?): Boolean {
+        if (mNfcAdapter == null) {
+            // Stop here, we definitely need NFC
+            Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show()
+            finish()
             return false
         }
         return true
