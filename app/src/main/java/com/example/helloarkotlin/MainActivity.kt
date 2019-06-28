@@ -4,19 +4,24 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.nfc.NdefMessage
-import android.nfc.NdefRecord.RTD_TEXT
-import android.nfc.NdefRecord.TNF_WELL_KNOWN
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import android.provider.AlarmClock.EXTRA_MESSAGE
-import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import com.example.helloarkotlin.artest.api.ApiRepository
+import com.example.helloarkotlin.artest.api.ApiViewModel
+import com.example.helloarkotlin.artest.api.data.ArStoreComponents
 
 
 class MainActivity : AppCompatActivity() {
 
     private var mNfcAdapter: NfcAdapter? = null
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,25 +32,17 @@ class MainActivity : AppCompatActivity() {
         if (!checkIsSupportedDeviceOrFinish(this, mNfcAdapter)) return
 
     }
-    fun startArSession(view: View) = startArActivity()
-
-    private fun startArActivity() {
-        val intent = Intent(this, AugmentedRealityActivity::class.java).apply {
-            putExtra(EXTRA_MESSAGE, "Testing Intent")
-        }
-        startActivity(intent)
-    }
+    fun startArSession(view: View) {}
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
         if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
-            if (isSupportedTag(intent)) startArActivity()
-            else Toast.makeText(this, "Tag not Supported", Toast.LENGTH_LONG).show()
+            startifIsSupportedTag(intent)
         }
     }
 
-    private fun isSupportedTag(intent: Intent): Boolean {
+    private fun startifIsSupportedTag(intent: Intent): Boolean {
         val messages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
         // Check if Byte Array is correctly read from Parcelable (NFC Tag)
         if (messages != null) {
@@ -57,6 +54,22 @@ class MainActivity : AppCompatActivity() {
             // Check if Type of the Record matches with expected Text Type
             val id = String(ndefRecord.payload)
             // HERE ID CHECK
+
+
+            // TODO: Check up on Name after RFID is rewritten
+            ApiViewModel(ApiRepository(), "A912371").arStore.observe(this, Observer {
+                components: ArStoreComponents ->
+                val name = components.items[0].name
+                Log.i("TESTER", "Observed Result $name")
+
+                startActivity(Intent(this, AugmentedRealityActivity::class.java).apply {
+                    putExtra(EXTRA_MESSAGE, "Testing Intent")
+                })
+            })
+
+
+
+
             // IF ID FITS GO FURTHER, IF NOT GO BAD
             Toast.makeText(this, "ID is $id", Toast.LENGTH_LONG).show()
             return true

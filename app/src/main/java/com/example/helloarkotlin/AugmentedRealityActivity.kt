@@ -4,17 +4,14 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Color
-import android.graphics.SurfaceTexture
 import android.media.MediaPlayer
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.ar.core.Config
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.ArSceneView
-import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.google.ar.sceneform.ux.ArFragment
@@ -39,10 +36,9 @@ class AugmentedRealityActivity : AppCompatActivity() {
 
         arFragment = supportFragmentManager.findFragmentById(R.id.ux_fragment) as ArFragment?
         val sceneView = arFragment!!.arSceneView
-        configureSceneView(sceneView)
+        // configureSceneView(sceneView)
 
         //GET DATABASE INFORMATION
-
         // val pose = sceneView.arFrame?.camera?.pose
         // val locationPose = Pose.makeTranslation(100.0f, 4.0f, 0.0f)//define a translation
         // val targetPose = pose?.compose(locationPose) //make a new pose based on camera pose
@@ -110,7 +106,7 @@ class AugmentedRealityActivity : AppCompatActivity() {
      */
     private fun buildTestingCircle(anchorNode: AnchorNode) {
         MaterialFactory.makeOpaqueWithColor(this,
-            com.google.ar.sceneform.rendering.Color(Color.RED)
+            Color(Color.RED)
         ).thenAccept {
             createTransformableNode(anchorNode).renderable = ShapeFactory.makeSphere(0.05f, Vector3(0f, 0f, 0f), it)
         }
