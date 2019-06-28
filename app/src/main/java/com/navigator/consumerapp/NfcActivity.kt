@@ -1,31 +1,47 @@
 package com.navigator.consumerapp
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.media.MediaPlayer
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.navigator.consumerapp.arview.AugmentedRealityActivity
+import com.google.ar.core.Config
+import com.google.ar.sceneform.AnchorNode
+import com.google.ar.sceneform.ArSceneView
+import com.google.ar.sceneform.Scene
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.rendering.*
+import com.google.ar.sceneform.ux.ArFragment
+import com.google.ar.sceneform.ux.TransformableNode
 import com.navigator.consumerapp.datastorage.api.repo.ApiRepository
 import com.navigator.consumerapp.datastorage.api.serialization.ArStoreComponents
 import com.navigator.consumerapp.viewmodel.ApiViewModel
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class NfcActivity : AppCompatActivity() {
+
+    private val tag = NfcActivity::class.java.simpleName
     private var mNfcAdapter: NfcAdapter? = null
+    private val minOpenGLVersion = 3.0
+    private var arFragment: ArFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this)
         if (!checkIsSupportedDeviceOrFinish(this, mNfcAdapter)) return
+        setContentView(R.layout.activity_main)
     }
-    fun startArSession(view: View) {}
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -45,19 +61,49 @@ class NfcActivity : AppCompatActivity() {
             // Check if Type of the Record matches with expected Text Type
             val ndefDeviceId = String(ndefRecord.payload)
             // HERE ID CHECK
+
+            animation_view.playAnimation()
             var idCheckSuccessful = false
             ApiViewModel(ApiRepository(), ndefDeviceId).arStore.observe(this, Observer {
                 components: ArStoreComponents ->
-                idCheckSuccessful = if(components.items[0].deviceId == ndefDeviceId) {
-                    startActivity(Intent(this, AugmentedRealityActivity::class.java))
+                idCheckSuccessful = if(components.items?.get(0)?.deviceId == ndefDeviceId) {
+                    frameLayout.visibility = View.VISIBLE
+
+                    arFragment = supportFragmentManager.findFragmentById(R.id.ux_fragment) as ArFragment?
+                    val sceneView = arFragment?.arSceneView
+                    configureSceneView(arFragment?.arSceneView)
+
+                    setupArElements(sceneView!!.scene)
+
+                    animation_view.cancelAnimation()
                     true
                 } else {
-                    Toast.makeText(this, "Tag wurde nicht erkannt", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.NfcTagNotFound), Toast.LENGTH_LONG).show()
                     false
                 }
             })
             return (idCheckSuccessful)
         } else return false
+    }
+
+    private fun setupArElements(scene: Scene) {
+        val anchorNodeTestingCircle = AnchorNode()
+        anchorNodeTestingCircle.localPosition = Vector3(0.0f, 0.0f, -0.6f)
+        anchorNodeTestingCircle.setParent(scene)
+        buildTestingCircle(anchorNodeTestingCircle)
+
+        val anchorNodeInfoCard = AnchorNode()
+        anchorNodeInfoCard.localPosition = Vector3(0.0f, 0.0f, -0.6f)
+        anchorNodeInfoCard.setParent(scene)
+        buildInfoCard(anchorNodeInfoCard)
+
+        val anchorNodeMovie = AnchorNode()
+        anchorNodeMovie.localPosition = Vector3(0.0f, 0.0f, -0.7f)
+        anchorNodeMovie.localScale = Vector3(
+            0.5f, 0.5f, 1.0f
+        )
+        anchorNodeMovie.setParent(scene)
+        buildMovieCard(anchorNodeMovie)
     }
 
     /**
@@ -83,10 +129,86 @@ class NfcActivity : AppCompatActivity() {
     private fun checkIsSupportedDeviceOrFinish(activity: Activity, mNfcAdapter: NfcAdapter?): Boolean {
         if (mNfcAdapter == null) {
             // Stop here, we definitely need NFC
-            Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.NoSupportForNfc), Toast.LENGTH_LONG).show()
             finish()
             return false
         }
+        val openGlVersionString = (activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
+            .deviceConfigurationInfo
+            .glEsVersion
+        if (java.lang.Double.parseDouble(openGlVersionString) < minOpenGLVersion) {
+            Log.e(tag, getString(R.string.SceneformNeedsGreaterOpenGLVersion))
+            Toast.makeText(activity, getString(R.string.SceneformNeedsGreaterOpenGLVersion), Toast.LENGTH_LONG)
+                .show()
+            activity.finish()
+            return false
+        }
         return true
+    }
+
+    /**
+     * Configures AR Core
+     */
+    private fun configureSceneView(sceneView: ArSceneView?) {
+        val config = sceneView?.session?.config ?: return
+        config.planeFindingMode = Config.PlaneFindingMode.DISABLED
+        config.augmentedFaceMode = Config.AugmentedFaceMode.DISABLED
+        config.focusMode = Config.FocusMode.AUTO
+        config.cloudAnchorMode = Config.CloudAnchorMode.DISABLED
+        config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+    }
+
+    /**
+     * Builds an AR Playback Movie out of the raw Movie
+     */
+    private fun buildMovieCard(anchorNode: AnchorNode) {
+        // Create an ExternalTexture for displaying the contents of the video.
+        val texture = ExternalTexture()
+
+        // Create an Android MediaPlayer to capture the video on the external texture's surface.
+        val mediaPlayer = MediaPlayer.create(this, R.raw.lion_chroma)
+        mediaPlayer.setSurface(texture.surface)
+        mediaPlayer.isLooping = true
+
+        // Create a renderable with a material that has a parameter of type 'samplerExternal' so that
+        // it can display an ExternalTexture. The material also has an implementation of a chroma key
+        // filter.
+        ModelRenderable.builder()
+            .setSource(this, R.raw.chroma_key_video)
+            .build()
+            .thenAccept {
+                it.material.setExternalTexture("videoTexture", texture)
+                createTransformableNode(anchorNode).renderable = it
+                if (!mediaPlayer.isPlaying) mediaPlayer.start()
+            }
+    }
+
+    /**
+     * Builds an Info Card out of the Info Card Widget XML
+     */
+    private fun buildInfoCard(anchorNode: AnchorNode) {
+        ViewRenderable.builder()
+            .setView(this, R.layout.info_card_widget)
+            .build()
+            .thenAccept { createTransformableNode(anchorNode).renderable = it }
+            .exceptionally {
+                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
+                return@exceptionally null }
+    }
+    /**
+     * Creates a Red Circle for testing out Positioning of Elements in the augmented dimension
+     */
+    private fun buildTestingCircle(anchorNode: AnchorNode) {
+        MaterialFactory.makeOpaqueWithColor(this,
+            com.google.ar.sceneform.rendering.Color(Color.RED)
+        ).thenAccept {
+            createTransformableNode(anchorNode).renderable = ShapeFactory.makeSphere(0.05f, Vector3(0f, 0f, 0f), it)
+        }
+    }
+
+    private fun createTransformableNode(anchorNode: AnchorNode): TransformableNode {
+        val node = TransformableNode(arFragment?.transformationSystem)
+        node.setParent(anchorNode)
+        return node
     }
 }
