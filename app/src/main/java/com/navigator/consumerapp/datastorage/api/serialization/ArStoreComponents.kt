@@ -5,7 +5,7 @@ import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 
 data class ArStoreComponents(
-    @SerializedName("Items") var items: List<ArStoreComponent>?,
+    @SerializedName("Items") var items: List<ArStoreComponent>,
     @SerializedName("Count") var count: String?,
     @SerializedName("ScannedCount") var scannedCount: String?
 ) : Parcelable {
