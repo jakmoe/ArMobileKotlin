@@ -26,6 +26,7 @@ import com.google.ar.sceneform.ux.TransformableNode
 import com.navigator.consumerapp.datastorage.api.repo.ApiRepository
 import com.navigator.consumerapp.datastorage.api.serialization.ArStoreComponent
 import com.navigator.consumerapp.datastorage.api.serialization.ArStoreComponents
+import com.navigator.consumerapp.datastorage.api.serialization.ArStoreElement
 import com.navigator.consumerapp.helpers.CameraPermissionHelper
 import com.navigator.consumerapp.viewmodel.ApiViewModel
 import kotlinx.android.synthetic.main.activity_main.*
@@ -88,6 +89,16 @@ class NfcActivity : AppCompatActivity() {
 
 
     private fun setupArElements(scene: Scene?, arStoreComponent: ArStoreComponent) {
+
+        if (!arStoreComponent.elements.isNullOrEmpty()) for (element in arStoreComponent.elements!!) {
+            when (element.type) {
+                "0" -> setupView(element)
+                "1" -> setupVideo(element)
+                "2" -> setupChoiceElement(element)
+            }
+        }
+
+
         if (scene == null) return
         // TODO("Include Logic to use arStoreComponent from Database")
 
@@ -131,12 +142,23 @@ class NfcActivity : AppCompatActivity() {
         buildMovieCard(anchorNodeMovie)
     }
 
+    private fun setupChoiceElement(element: ArStoreElement) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    private fun setupVideo(element: ArStoreElement) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    private fun setupView(element: ArStoreElement) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private fun logEventLoop(logName: String, origin: Float, offset: Float) {
         Log.d("SCENEUPDATER", "${logName.toUpperCase()} ORIGIN:   $origin")
         Log.d("SCENEUPDATER", "${logName.toUpperCase()} OFFSET:   $offset")
     }
 
-    private fun getNodeAtCameraPosition(scene: Scene) = AnchorNode().apply { this.localPosition = scene.camera.localPosition }
 
     /** Builds an AR Playback Movie out of the raw Movie */
     private fun buildMovieCard(anchorNode: AnchorNode) {
@@ -209,7 +231,7 @@ class NfcActivity : AppCompatActivity() {
         config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
     }
 
-
+    private fun getNodeAtCameraPosition(scene: Scene) = AnchorNode().apply { this.localPosition = scene.camera.localPosition }
     /** Toast Generator for bad Tag */
     private fun showToastTagNotSupported() = Toast.makeText(this, getString(R.string.NfcTagNotFound), Toast.LENGTH_LONG).show()
     /** Pending Intent Helper Function */
