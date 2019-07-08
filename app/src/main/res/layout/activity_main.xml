@@ -1,29 +1,132 @@
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/animation_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:lottie_rawRes="@raw/loading"
-            app:lottie_loop="true" app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"
-            android:visibility="invisible"/>
-
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:baselineAligned="true"
+        android:clipChildren="true" android:dividerPadding="0dp" android:id="@+id/linearLayout">
+    
+    <androidx.appcompat.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:background="@color/colorPrimary"
+            android:theme="?attr/actionBarTheme"
+            android:minHeight="?attr/actionBarSize"
+            android:id="@+id/toolbar"
+            android:layout_marginBottom="0dp" android:clipToPadding="false" android:paddingLeft="0dp"
+            android:paddingRight="0dp" app:contentInsetStart="0dp" android:visibility="gone">
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:paddingEnd="16dp" android:paddingStart="16dp">
+            
+            
+            <ImageButton
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true" app:srcCompat="@drawable/sceneform_hand_phone"
+                    android:id="@+id/imageButton" android:scaleType="centerInside" android:padding="0dp"
+                    android:backgroundTint="@color/colorPrimaryDark" android:tint="#00C25454"
+                    style="@style/Widget.AppCompat.ImageButton"
+                    android:contentDescription="@string/NewScanStartTooltip"
+                    android:background="@drawable/button_shape" android:onClick="startNewScan"/>
+            <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" android:id="@+id/TitleBox" android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CarTitle" android:id="@+id/CarTitleTextView"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:textColor="@android:color/black"/>
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Description" android:id="@+id/carDescriptionTextView"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@android:color/darker_gray"/>
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Second Description" android:id="@+id/carDescriptionTextView2"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                        android:textColor="?attr/colorPrimaryDark"/>
+            </LinearLayout>
+        
+        </RelativeLayout>
+    
+    </androidx.appcompat.widget.Toolbar>
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:background="@color/colorPrimaryDark"/>
     <FrameLayout
-                 android:id="@+id/frameLayout"
-                 android:visibility="invisible"
-                 android:layout_width="match_parent"
-                 android:layout_height="match_parent">
-
+            android:id="@+id/frameLayout"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:background="#000000">
+    
         <fragment android:name="com.google.ar.sceneform.ux.ArFragment"
                   android:id="@+id/ux_fragment"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent" tools:layout="@layout/arfragment"/>
+        <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/animation_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:lottie_rawRes="@raw/loading"
+                app:lottie_loop="true" android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:visibility="invisible"/>
 
     </FrameLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:padding="20dp" android:visibility="visible"
+            android:id="@+id/startingView">
+        
+        <ImageView
+                android:layout_width="250dp"
+                android:layout_height="wrap_content" app:srcCompat="@drawable/sceneform_hand_phone"
+                android:id="@+id/imageView" android:adjustViewBounds="true"
+                android:contentDescription="@string/NewScanStartTooltip"
+                android:background="@drawable/button_shape_start_screen" android:paddingVertical="20dp"
+                android:paddingHorizontal="20dp" android:padding="20dp" android:paddingTop="20dp"
+                android:cropToPadding="true"
+                app:layout_constraintBottom_toTopOf="@+id/carTitleTextView" android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent" android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
+                app:layout_constraintStart_toStartOf="parent"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/scan_a_new_car" android:id="@+id/carTitleTextView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display2"
+                android:textColor="@android:color/black" android:fontFamily="sans-serif"
+                app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="8dp"
+                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintHorizontal_bias="0.5" app:layout_constraintEnd_toEndOf="parent"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hold_against_nfc" android:id="@+id/carTitleTextView2"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@android:color/black" android:fontFamily="sans-serif"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/carTitleTextView" android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
+                app:layout_constraintStart_toStartOf="parent"/>
+        <Button
+                android:text="@string/debug"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/button" android:onClick="startDebugAr"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/carTitleTextView2" android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
+                app:layout_constraintStart_toStartOf="parent" android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                style="@style/Widget.AppCompat.Button.ButtonBar.AlertDialog"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

@@ -41,10 +41,12 @@ class NfcActivity : AppCompatActivity() {
     /** At creation of Activity setup Fragment */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setSupportActionBar(findViewById(R.id.toolbar))
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this)
         if (!checkIsSupportedDeviceOrFinish(this, mNfcAdapter)) return
         setContentView(R.layout.activity_main)
         arFragment = supportFragmentManager.findFragmentById(R.id.ux_fragment) as ArFragment?
+        configureSceneView(arFragment?.arSceneView)
     }
 
     /** Reregister the Checking for NFC Tags */
@@ -65,9 +67,18 @@ class NfcActivity : AppCompatActivity() {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) startIfIsSupportedTag(intent)
     }
 
+    fun startNewScan(view: View) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    fun startDebugAr(view: View) {
+        toolbar.visibility = View.VISIBLE
+        frameLayout.visibility = View.VISIBLE
+        startingView.visibility = View.GONE
+    }
+
     private fun startIfIsSupportedTag(intent: Intent) {
         animation_view.playAnimation()
-        frameLayout.visibility = View.VISIBLE
         val ndefMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
         if (ndefMessages != null) {
             // Cast Byte Array into NdefMessage for Reading (MIME Type text/plain = String)
@@ -75,8 +86,9 @@ class NfcActivity : AppCompatActivity() {
 
             ApiViewModel(ApiRepository(), ndefDeviceId).arStore.observe(this, Observer { components: ArStoreComponents ->
                 if (components.items.isNotEmpty() && components.items[0].deviceId == ndefDeviceId) {
-                    configureSceneView(arFragment?.arSceneView)
                     setupArElements(arFragment?.arSceneView?.scene, components.items[0])
+                    startingView.visibility = View.GONE
+                    toolbar.visibility = View.VISIBLE
                     frameLayout.visibility = View.VISIBLE
                 }
                 else showToastTagNotSupported()

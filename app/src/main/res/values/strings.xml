@@ -5,4 +5,9 @@
     <string name="SceneformNeedsGreaterOpenGLVersion">Sceneform requires OpenGL ES 3.0 later</string>
     <string name="CameraPermissionNeeded">Camera permission is needed to run this application</string>
     <string name="ErrorAtViewBuilding">Error Building View</string>
+    <string name="NewScanStart">Neuer Scan</string>
+    <string name="NewScanStartTooltip">Click um ein neues Auto zu scannen!</string>
+    <string name="scan_a_new_car">Scan a new Car!</string>
+    <string name="hold_against_nfc">Simply hold it against an NFC Tag</string>
+    <string name="debug">Debug</string>
 </resources>
