@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Mobile AR Project</string>
+    <string name="app_name">Navigator</string>
     <string name="NfcTagNotFound">NFC Tag wurde nicht erkannt</string>
     <string name="NoSupportForNfc">Dieses Gerät unterstützt kein NFC</string>
     <string name="SceneformNeedsGreaterOpenGLVersion">Sceneform requires OpenGL ES 3.0 later</string>
@@ -10,4 +10,11 @@
     <string name="scan_a_new_car">Scan a new Car!</string>
     <string name="hold_against_nfc">Simply hold it against an NFC Tag</string>
     <string name="debug">Debug</string>
+    <string name="MoveAwayFromObject">Bewege dich nun ca. 1 Meter zurück!</string>
+    <string name="RfidInstructions">Halte dein Smartphone an den Mercedes-Stern!</string>
+    <string name="ScanFailed">Irgendwas ist beim Scan schiefgelaufen!</string>
+    <string name="exchangable_picture">Exchangable Picture</string>
+    <string name="picturecontent">PictureContent</string>
+    <string name="leftbutton">LeftButton</string>
+    <string name="rightbutton">RightButton</string>
 </resources>

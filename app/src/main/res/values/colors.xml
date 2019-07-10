@@ -4,4 +4,6 @@
     <color name="colorPrimaryDark">#FF7700</color>
     <color name="colorBackground">#B1B1B1</color>
     <color name="colorAccent">#FFB70D</color>
+    <color name="colorSuccess">#00FF2A</color>
+    <color name="colorFailure">#FF0000</color>
 </resources>
