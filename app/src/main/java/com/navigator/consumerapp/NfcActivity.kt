@@ -37,7 +37,9 @@ import com.navigator.consumerapp.viewmodel.ApiViewModel
 import com.navigator.consumerapp.viewmodel.RfidViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.info_card_widget.view.*
 import kotlinx.android.synthetic.main.object_chooser.view.*
+import kotlin.math.absoluteValue
 
 
 class NfcActivity : AppCompatActivity() {
@@ -147,8 +149,8 @@ class NfcActivity : AppCompatActivity() {
             anchorNode.localRotation = createQuaternionFromArStoreFloatList(element.orientation)
             when (element.type) {
                 "0" -> buildMovieCard(anchorNode, element.link)
-                "1" -> buildViewCard(anchorNode, R.layout.info_card_widget)
-                "2" -> if (element.modelList != null) buildChoiceElement(anchorNode, element.modelList!!)
+                "1" -> buildViewCard(anchorNode, R.layout.info_card_widget, element.text!!)
+                "2" -> if (element.modelList != null) buildChoiceElement(anchorNode, element.modelList!!, scene)
             }
             anchorNode.setParent(scene)
         }
@@ -171,7 +173,7 @@ class NfcActivity : AppCompatActivity() {
 
     }
 
-    private fun buildChoiceElement(anchorNode: AnchorNode, modelList: List<ArStoreModel?>) {
+    private fun buildChoiceElement(anchorNode: AnchorNode, modelList: List<ArStoreModel?>, scene: Scene) {
         ViewRenderable.builder()
             .setView(this, R.layout.object_chooser)
             .build()
@@ -190,12 +192,18 @@ class NfcActivity : AppCompatActivity() {
                     renderable.view.imageCaption.text = modelList[index]?.name
                 }
             }
+        scene.addOnUpdateListener {
+            //Only Log every half Second
+            Log.i("TESTAR", scene.camera.localPosition.x.absoluteValue.toString())
+            anchorNode.isEnabled = scene.camera.localPosition.x.absoluteValue >= 0.35
+        }
     }
 
     /** Builds an AR Playback Movie out of the raw Movie */
     private fun buildMovieCard(anchorNode: AnchorNode, link: String?) {
         val texture = ExternalTexture()
         MediaPlayer().apply {
+            isLooping = true
             setDataSource(link)
             setOnPreparedListener { mediaPlayer ->
                 ModelRenderable.builder()
@@ -209,13 +217,15 @@ class NfcActivity : AppCompatActivity() {
             }
             prepareAsync()
             setSurface(texture.surface)
-            isLooping = true
         }
     }
 
     /** Builds an Info Card out of the Info Card Widget XML */
-    private fun buildViewCard(anchorNode: AnchorNode, view: Int) = ViewRenderable.builder().setView(this, view).build()
-        .thenAccept { createTransformableNode(anchorNode).renderable = it }
+    private fun buildViewCard(anchorNode: AnchorNode, view: Int, text: String) = ViewRenderable.builder().setView(this, view).build()
+        .thenAccept { renderable ->
+            renderable.view.textView.text = text
+            createTransformableNode(anchorNode).renderable = renderable
+        }
         .exceptionally { Toast.makeText(this, getString(R.string.ErrorAtViewBuilding), Toast.LENGTH_SHORT).show(); null }
 
     /** Creates a Red Circle for testing out Positioning of Elements in the augmented dimension */
@@ -309,7 +319,7 @@ class NfcActivity : AppCompatActivity() {
     private fun createVectorFromArStoreFloatList(list: List<Float>?): Vector3 =
         if (list != null && list.size == 3) Vector3(list[0], list[1], list[2]) else Vector3(0f, 0f, 0f)
     private fun createQuaternionFromArStoreFloatList(list: List<Float>?): Quaternion =
-        if (list != null && list.size == 4) Quaternion(list[0], list[1], list[2], list[3]) else Quaternion(0f, 0f, 0f, 0f)
+        if (list != null && list.size == 4) Quaternion(Vector3(list[0], list[1], list[2]), list[3]) else Quaternion(Vector3(0f, 0f, 0f), 0f)
     fun startDebugAr(view: View) {
         toolbar.visibility = View.VISIBLE
         frameLayout.visibility = View.VISIBLE

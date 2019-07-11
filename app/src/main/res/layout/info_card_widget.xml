@@ -5,7 +5,8 @@
           android:layout_weight="1"
           android:gravity="center"
           android:orientation="vertical"
-          android:background="@drawable/ic_launcher_background"
           android:padding="6dp"
           android:text="Test"
-          android:textAlignment="center"/>
+          android:textAlignment="center" android:id="@+id/textView"
+          android:background="@drawable/text_background" android:textSize="18sp"
+          android:textColor="@color/colorPrimary"/>

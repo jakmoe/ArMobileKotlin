@@ -9,7 +9,6 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val intent = Intent(this, NfcActivity::class.java)
         startActivity(intent)
         finish()
