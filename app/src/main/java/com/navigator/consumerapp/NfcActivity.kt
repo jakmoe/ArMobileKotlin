@@ -168,7 +168,7 @@ class NfcActivity : AppCompatActivity() {
             .thenAccept { renderable ->
                 anchorNode.renderable = renderable
                 var index = 0
-                Picasso.get().load(modelList[index]?.textureLink).into(renderable.view.imageView as ImageView)
+
                 renderable.view.imageButtonLeft.setOnClickListener {
                     if (index == 0) index = modelList.lastIndex+1
                     Picasso.get().load(modelList.getOrNull(--index)?.textureLink).into(renderable.view.imageView as ImageView)
@@ -179,6 +179,9 @@ class NfcActivity : AppCompatActivity() {
                     Picasso.get().load(modelList.getOrNull(++index)?.textureLink).into(renderable.view.imageView as ImageView)
                     renderable.view.imageCaption.text = modelList[index]?.name
                 }
+
+                renderable.view.imageCaption.text = modelList[index]?.name
+                Picasso.get().load(modelList.getOrNull(index)?.textureLink).into(renderable.view.imageView as ImageView)
             }
 //        scene.addOnUpdateListener {
 //            //Only Log every half Second
@@ -203,7 +206,7 @@ class NfcActivity : AppCompatActivity() {
                         mediaPlayer.start()
                     }
             }
-            prepareAsync()
+            prepare()
         }
     }
 
