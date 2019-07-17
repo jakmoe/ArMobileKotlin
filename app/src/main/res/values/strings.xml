@@ -12,7 +12,7 @@
     <string name="debug">Debug</string>
     <string name="MoveAwayFromObject">Bewege dich nun ca. 1 Meter zurück!</string>
     <string name="RfidInstructions">Halte dein Smartphone an den Mercedes-Stern!</string>
-    <string name="ScanFailed">Irgendwas ist beim Scan schiefgelaufen!</string>
+    <string name="ScanFailed">Irgendwas ist beim Scan schiefgelaufen! Versuch es doch noch einmal oder nimm ein anderes Auto!</string>
     <string name="exchangable_picture">Exchangable Picture</string>
     <string name="picturecontent">PictureContent</string>
     <string name="leftbutton">LeftButton</string>

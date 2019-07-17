@@ -47,6 +47,7 @@ class NfcActivity : AppCompatActivity() {
     private var mNfcAdapter: NfcAdapter? = null
     private var arFragment: ArFragment? = null
     private var startingPosition: AnchorNode? = null
+    private var mediaPlayer: MediaPlayer? = null
 
     /** At creation of Activity setup Fragment */
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,11 +76,14 @@ class NfcActivity : AppCompatActivity() {
     /** Register the Check for an RFID Tag whenever a new Tag is discovered */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) startIfIsSupportedTag(intent)
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action ||
+                NfcAdapter.ACTION_TAG_DISCOVERED == intent.action ) startIfIsSupportedTag(intent)
     }
 
     fun startNewScan(view: View) {
         changeStatusImageView(0)
+        mediaPlayer?.release()
+        mediaPlayer = null
         startingView.visibility = View.VISIBLE
         toolbar.visibility = View.GONE
         startingPosition?.setParent(null)
@@ -87,12 +91,14 @@ class NfcActivity : AppCompatActivity() {
 
     private fun startIfIsSupportedTag(intent: Intent) {
         startStopLoadingAnimation()
-        RfidViewModel(RfidRepository(), intent).deviceId.observe(this, Observer {ndefDeviceId: String ->
+        RfidViewModel(RfidRepository(), intent).deviceId.observe(this, Observer {ndefDeviceId: String? ->
             if (ndefDeviceId == "") {
                 changeStatusImageView(2)
                 showToastTagNotSupported()
+                startStopLoadingAnimation()
+                return@Observer
             }
-            ApiViewModel(ApiRepository(), ndefDeviceId).arStore.observe(this, Observer { components: ArStoreComponents ->
+            ApiViewModel(ApiRepository(), ndefDeviceId!!).arStore.observe(this, Observer { components: ArStoreComponents ->
                 if (components.items.isNotEmpty() && components.items[0].deviceId == ndefDeviceId) {
                     configureSceneView(arFragment?.arSceneView)
                     arFragment?.arSceneView?.scene!!.addOnUpdateListener { Log.i("ARTEST CAMERA", "CAMERA: W: ${arFragment?.arSceneView?.scene!!.camera.worldPosition}, L: ${arFragment?.arSceneView?.scene!!.camera.localPosition}") }
@@ -183,16 +189,17 @@ class NfcActivity : AppCompatActivity() {
                 renderable.view.imageCaption.text = modelList[index]?.name
                 Picasso.get().load(modelList.getOrNull(index)?.textureLink).into(renderable.view.imageView as ImageView)
             }
-//        scene.addOnUpdateListener {
-//            //Only Log every half Second
-//            anchorNode.isEnabled = scene.camera.localPosition.x.absoluteValue >= 0.35
-//        }
+        scene.addOnUpdateListener {
+            //Only Log every half Second
+            anchorNode.isEnabled = scene.camera.localPosition.x <= anchorNode.localPosition.x
+        }
     }
 
     /** Builds an AR Playback Movie out of the raw Movie */
     private fun buildMovieCard(anchorNode: AnchorNode, link: String?) {
         val texture = ExternalTexture()
-        MediaPlayer().apply {
+        mediaPlayer = MediaPlayer()
+        mediaPlayer?.apply {
             isLooping = true
             setDataSource(link)
             setOnPreparedListener { mediaPlayer ->
@@ -206,7 +213,7 @@ class NfcActivity : AppCompatActivity() {
                         mediaPlayer.start()
                     }
             }
-            prepare()
+            prepareAsync()
         }
     }
 
@@ -271,6 +278,7 @@ class NfcActivity : AppCompatActivity() {
             2 -> {
                 drawable = ContextCompat.getDrawable(this, R.drawable.ic_not_ok)
                 statusImageView.background = ContextCompat.getDrawable(this, R.drawable.button_shape_start_screen_fail)
+                userInteractionMainText.visibility = View.GONE
                 userInteractionDetailText.text = getString(R.string.ScanFailed)
             }
         }
