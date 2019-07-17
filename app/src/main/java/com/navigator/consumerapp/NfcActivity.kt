@@ -82,7 +82,7 @@ class NfcActivity : AppCompatActivity() {
         changeStatusImageView(0)
         startingView.visibility = View.VISIBLE
         toolbar.visibility = View.GONE
-        frameLayout.visibility = View.GONE
+        startingPosition?.setParent(null)
     }
 
     private fun startIfIsSupportedTag(intent: Intent) {
